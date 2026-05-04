@@ -22,7 +22,7 @@ The result is a knowledge base that is:
 - **Structured.** Entities have types, relationships are explicit, hierarchy is preserved.
 - **Navigable.** Follow links from a requirement to its design to its tasks. Not keyword matching — graph traversal.
 - **Human-readable.** It's just markdown files in a folder. Open them, browse them, edit them by hand.
-- **Citable.** Every answer can link directly to the source file: `kb/dvdol/sys-auth-service.md`.
+- **Citable.** Every answer can link directly to the source file: `kb/projname/sys-auth-service.md`.
 
 The catch: building and maintaining a graph knowledge base is tedious manual work. Mnemosyne solves this by using an **agent** to create and maintain the graph through natural language.
 
@@ -80,7 +80,7 @@ What tasks are assigned to Joe and still in progress?
 What are we missing for the SSO integration?
 ```
 
-Answers cite source files directly (e.g., [Auth Service](kb/dvdol/sys-auth-service.md)) so you can click through and verify.
+Answers cite source files directly (e.g., [Auth Service](kb/projname/sys-auth-service.md)) so you can click through and verify.
 
 ### Browse the knowledge base
 
@@ -91,7 +91,7 @@ kb/
   users/
     joe-smith.md
     sarah-chen.md
-  dvdol/
+  projname/
     index.md
     team-backend.md
     req-sso-integration.md
@@ -171,8 +171,8 @@ The `iwe_*` tools map to IWE CLI commands. Key operations:
 
 ```bash
 iwe find "auth"              # fuzzy search
-iwe retrieve -k dvdol/sys-auth-service -d 2  # expand 2 levels of children
-iwe tree -k dvdol/index      # show hierarchy from project root
+iwe retrieve -k projname/sys-auth-service -d 2  # expand 2 levels of children
+iwe tree -k projname/index      # show hierarchy from project root
 iwe stats                    # document count, link count, broken links
 ```
 
