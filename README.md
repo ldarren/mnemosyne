@@ -30,18 +30,6 @@ The catch: building and maintaining a graph knowledge base is tedious manual wor
 
 Mnemosyne runs as a chat agent. You talk to it in natural language.
 
-### Setup
-
-You can either use a `.env` file to set up your LLM model access, or use AWS Bedrock without a `.env` file. See the [pi-ai documentation](https://github.com/badlogic/pi-mono/tree/main/packages/ai#environment-variables-nodejs-only) for details.
-
-```bash
-npm ci
-brew install iwe
-mkdir -p kb && cd kb && iwe init
-cd ..
-npm start
-```
-
 ### Ingest documents
 
 Give it files and it extracts entities into the knowledge graph:
@@ -192,9 +180,11 @@ iwe stats                    # document count, link count, broken links
 
 ## Setup
 
+You can either use a `.env` file to set up your LLM model access, or use AWS Bedrock without a `.env` file. See the [pi-ai documentation](https://github.com/badlogic/pi-mono/tree/main/packages/ai#environment-variables-nodejs-only) for details.
+
 ```bash
 # install IWE
-brew install nickarner/tap/iwe
+brew install iwe
 
 # install dependencies
 npm install
