@@ -1,0 +1,32 @@
+{
+  "name": "mnemosyne",
+  "version": "0.1.0",
+  "description": "POC agentic app for building graph-based knowledge bases from software development documents",
+  "type": "module",
+  "bin": {
+    "mnemosyne": "src/cli.ts"
+  },
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "start:rpc": "tsx src/cli.ts --mode rpc",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mariozechner/pi-ai": "^0.72.1",
+    "@mariozechner/pi-coding-agent": "^0.72.1",
+    "mammoth": "^1.12.0",
+    "pdf-parse": "^2.4.5",
+    "typebox": "^1.1.37"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pdf-parse": "^1.1.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.5"
+  }
+}
