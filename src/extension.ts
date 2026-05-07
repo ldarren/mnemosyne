@@ -4,13 +4,16 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { createParsePdfTool } from "./tools/parse-pdf.js";
 import { createParseDocxTool } from "./tools/parse-docx.js";
 import { createIweTools } from "./tools/iwe.js";
-import { createVisualizeTool } from "./tools/visualize.js";
+import { createVisualize2dTool } from "./tools/visualize-2d.js";
+import { createVisualize3dTool } from "./tools/visualize-3d.js";
 import { createSubagentTool } from "./tools/subagent.js";
+import { createPushFileTool } from "./tools/push-file.js";
+import { createStructuredContentTool } from "./tools/structured-content.js";
 
 const KNOWLEDGE_BASE_DIR = "kb";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SKILLS_DIR = resolve(__dirname, "skills");
+const SKILLS_DIR = resolve(__dirname, "..", "skills");
 
 const SYSTEM_PROMPT_APPEND = `
 ## Mnemosyne
@@ -53,7 +56,10 @@ export function mnemosyneExtension(pi: ExtensionAPI) {
   }
   pi.registerTool(createParsePdfTool(cwd));
   pi.registerTool(createParseDocxTool(cwd));
-  pi.registerTool(createVisualizeTool(cwd, iweCwd));
+  pi.registerTool(createVisualize2dTool(cwd, iweCwd));
+  pi.registerTool(createVisualize3dTool(cwd, iweCwd));
+  pi.registerTool(createPushFileTool(cwd));
+  pi.registerTool(createStructuredContentTool());
   createSubagentTool(pi);
 
   pi.on("resources_discover", () => {

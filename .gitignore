@@ -1,4 +1,7 @@
 node_modules/
+dist/
 kb/
+.DS_Store
 knowledge-graph-viewer.html
+knowledge-graph-3d.html
 

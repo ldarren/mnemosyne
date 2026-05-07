@@ -1,8 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { execFile } from "node:child_process";
 import { Type, type Static } from "typebox";
 import { defineTool } from "@mariozechner/pi-coding-agent";
+import { buildGraphData, ENTITY_COLORS, type GraphData } from "./graph-data.js";
 
 const VisualizeParams = Type.Object({
   output_path: Type.Optional(
@@ -14,82 +14,18 @@ const VisualizeParams = Type.Object({
 });
 type VisualizeInput = Static<typeof VisualizeParams>;
 
-function runIwe(args: string[], cwd: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    execFile(
-      "iwe",
-      args,
-      { cwd, maxBuffer: 10 * 1024 * 1024 },
-      (err, stdout, stderr) => {
-        if (err) {
-          reject(new Error(stderr || err.message));
-          return;
-        }
-        resolve(stdout);
-      },
-    );
-  });
-}
-
-interface FindResult {
-  key: string;
-  title: string;
-  includes: Array<{ key: string; title: string }>;
-  includedBy: Array<{ key: string; title: string }>;
-  references: Array<{ key: string; title: string }>;
-  referencedBy: Array<{ key: string; title: string }>;
-}
-
-interface CyNode {
-  data: {
-    id: string;
-    label: string;
-    type: string;
-    entityType: string;
-    project: string;
-    inRefs: number;
-    outRefs: number;
-  };
-}
-
-function getEntityType(key: string): string {
-  const filename = key.includes("/") ? key.split("/").pop()! : key;
-  if (filename === "index") return "index";
-  if (filename === "todo") return "todo";
-  const prefix = filename.split("-")[0];
-  const typeMap: Record<string, string> = {
-    req: "requirement", design: "design", task: "task", sys: "system",
-    api: "api", table: "table", adr: "adr", constraint: "constraint",
-    role: "role", team: "team",
-  };
-  if (typeMap[prefix]) return typeMap[prefix];
-  if (key.startsWith("users/")) return "user";
-  return "other";
-}
-
-function getProject(key: string): string {
-  if (key.startsWith("users/")) return "users";
-  const slash = key.indexOf("/");
-  return slash >= 0 ? key.substring(0, slash) : "(root)";
-}
-
-interface CyEdge {
-  data: { id: string; source: string; target: string; type: string };
-}
-
-export function createVisualizeTool(projectCwd: string, iweCwd: string) {
+export function createVisualize2dTool(projectCwd: string, iweCwd: string) {
   return defineTool({
     name: "iwe_visualize",
-    label: "Visualize Knowledge Graph",
+    label: "Visualize Knowledge Graph (2D)",
     description:
-      "Generate an interactive HTML visualization of the knowledge graph using Cytoscape.js. Writes an HTML file that can be opened in a browser.",
-    promptSnippet: "Visualize the knowledge graph as an interactive HTML page",
+      "Generate an interactive 2D HTML visualization of the knowledge graph using Cytoscape.js. Writes an HTML file that can be opened in a browser.",
+    promptSnippet: "Visualize the knowledge graph as an interactive 2D HTML page",
     parameters: VisualizeParams,
     async execute(_toolCallId, params: VisualizeInput) {
-      const findJson = await runIwe(["find", "-f", "json"], iweCwd);
-      const nodes = JSON.parse(findJson) as FindResult[];
+      const data = await buildGraphData(iweCwd);
 
-      if (!nodes || nodes.length === 0) {
+      if (!data) {
         return {
           content: [
             {
@@ -101,65 +37,7 @@ export function createVisualizeTool(projectCwd: string, iweCwd: string) {
         };
       }
 
-      const nodeSet = new Set(nodes.map((n) => n.key));
-      const edges: Array<{ source: string; target: string; type: string }> = [];
-      const edgeSet = new Set<string>();
-
-      for (const node of nodes) {
-        for (const parent of node.includedBy ?? []) {
-          if (nodeSet.has(parent.key)) {
-            const key = `pc:${parent.key}->${node.key}`;
-            if (!edgeSet.has(key)) {
-              edgeSet.add(key);
-              edges.push({
-                source: parent.key,
-                target: node.key,
-                type: "parent-child",
-              });
-            }
-          }
-        }
-
-        for (const ref of node.referencedBy ?? []) {
-          if (nodeSet.has(ref.key)) {
-            const key = `cr:${ref.key}->${node.key}`;
-            if (!edgeSet.has(key)) {
-              edgeSet.add(key);
-              edges.push({
-                source: ref.key,
-                target: node.key,
-                type: "cross-ref",
-              });
-            }
-          }
-        }
-      }
-
-      const cyNodes: CyNode[] = nodes.map((n) => ({
-        data: {
-          id: n.key,
-          label: n.title,
-          type: n.includedBy.length === 0 ? "root" : "child",
-          entityType: getEntityType(n.key),
-          project: getProject(n.key),
-          inRefs: n.referencedBy.length,
-          outRefs: n.references.length,
-        },
-      }));
-
-      const cyEdges: CyEdge[] = edges.map((e, i) => ({
-        data: {
-          id: `e${i}`,
-          source: e.source,
-          target: e.target,
-          type: e.type,
-        },
-      }));
-
-      const projects = [...new Set(cyNodes.map((n) => n.data.project))].sort();
-      const graphJson = JSON.stringify({ nodes: cyNodes, edges: cyEdges });
-      const html = generateHtml(graphJson, nodes.length, edges.length, projects);
-
+      const html = generateHtml(data);
       const outputPath = resolve(
         projectCwd,
         params.output_path ?? "knowledge-graph-viewer.html",
@@ -170,7 +48,7 @@ export function createVisualizeTool(projectCwd: string, iweCwd: string) {
         content: [
           {
             type: "text" as const,
-            text: `Graph visualization written to ${outputPath}\n${nodes.length} nodes, ${edges.length} edges.\nOpen the file in a browser to view.`,
+            text: `2D graph visualization written to ${outputPath}\n${data.nodes.length} nodes, ${data.edges.length} edges.\nOpen the file in a browser to view.`,
           },
         ],
         details: undefined,
@@ -179,13 +57,20 @@ export function createVisualizeTool(projectCwd: string, iweCwd: string) {
   });
 }
 
-function generateHtml(
-  graphDataJson: string,
-  nodeCount: number,
-  edgeCount: number,
-  projects: string[],
-): string {
-  const projectCheckboxes = projects.map((p) => `  <label class="toggle"><input type="checkbox" checked onchange="toggleProject('${p}', this.checked)"> ${p}</label>`).join("\n");
+function generateHtml(data: GraphData): string {
+  const cyNodes = data.nodes.map((n) => ({ data: n }));
+  const cyEdges = data.edges.map((e) => ({ data: e }));
+  const graphJson = JSON.stringify({ nodes: cyNodes, edges: cyEdges });
+
+  const projectCheckboxes = data.projects
+    .map(
+      (p) =>
+        `  <label class="toggle"><input type="checkbox" checked onchange="toggleProject('${p}', this.checked)"> ${p}</label>`,
+    )
+    .join("\n");
+
+  const entityStyleRulesJson = JSON.stringify(ENTITY_COLORS);
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -267,7 +152,7 @@ function generateHtml(
 
 <div class="panel title-bar">
   <h2>Mnemosyne Knowledge Graph</h2>
-  <p>${nodeCount} documents &middot; ${edgeCount} links</p>
+  <p>${data.nodes.length} documents &middot; ${data.edges.length} links</p>
 </div>
 
 <div class="panel filters">
@@ -294,25 +179,9 @@ ${projectCheckboxes}
 <div id="cy"></div>
 
 <script>
-var graphData = ${graphDataJson};
+var graphData = ${graphJson};
+var entityColors = ${entityStyleRulesJson};
 var allElements = [...graphData.nodes, ...graphData.edges];
-
-var entityColors = {
-  index:      { bg: '#f0883e', border: '#f0883e' },
-  requirement:{ bg: '#58a6ff', border: '#58a6ff' },
-  design:     { bg: '#a371f7', border: '#a371f7' },
-  task:       { bg: '#3fb950', border: '#3fb950' },
-  system:     { bg: '#f778ba', border: '#f778ba' },
-  api:        { bg: '#79c0ff', border: '#79c0ff' },
-  table:      { bg: '#56d364', border: '#56d364' },
-  adr:        { bg: '#d29922', border: '#d29922' },
-  constraint: { bg: '#f85149', border: '#f85149' },
-  team:       { bg: '#db61a2', border: '#db61a2' },
-  role:       { bg: '#bc8cff', border: '#bc8cff' },
-  user:       { bg: '#39d353', border: '#39d353' },
-  todo:       { bg: '#8b949e', border: '#8b949e' },
-  other:      { bg: '#484f58', border: '#6e7681' },
-};
 
 var entityStyleRules = Object.keys(entityColors).map(function(t) {
   return {
@@ -407,7 +276,6 @@ var cy = cytoscape({
   maxZoom: 5,
 });
 
-// Node info panel
 var infoPanel = document.getElementById('node-info');
 var infoTitle = document.getElementById('info-title');
 var infoKey = document.getElementById('info-key');
@@ -425,7 +293,6 @@ cy.on('tap', function(evt) {
   if (evt.target === cy) infoPanel.style.display = 'none';
 });
 
-// Highlight neighbors on hover
 cy.on('mouseover', 'node', function(evt) {
   var hood = evt.target.neighborhood().add(evt.target);
   cy.elements().not(hood).addClass('faded');
@@ -434,7 +301,6 @@ cy.on('mouseout', 'node', function() {
   cy.elements().removeClass('faded');
 });
 
-// Layout switching
 var layouts = {
   dagre:  { name: 'dagre', rankDir: 'TB', spacingFactor: 1.4, nodeSep: 60, rankSep: 100, animate: true, animationDuration: 400 },
   cose:   { name: 'cose', nodeRepulsion: function(){ return 8000; }, idealEdgeLength: function(){ return 120; }, gravity: 0.25, animate: true, animationDuration: 600 },
@@ -452,8 +318,7 @@ function setLayout(name) {
   if (btn) btn.classList.add('active');
 }
 
-// Project filter
-var visibleProjects = new Set(${JSON.stringify(projects)});
+var visibleProjects = new Set(${JSON.stringify(data.projects)});
 var showCrossRefs = true;
 
 function applyFilters() {

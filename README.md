@@ -131,7 +131,7 @@ Mnemosyne is a pi-coding-agent extension (`src/extension.ts`) that registers:
 | `mnemosyne-ingest` | Parse input, extract entities, build/update the graph, detect gaps |
 | `mnemosyne-query` | Traverse the graph, answer questions, cite sources, flag missing info |
 
-**4 tools** — capabilities the agent can invoke:
+**6 tools** — capabilities the agent can invoke:
 
 | Tool | Purpose |
 |---|---|
@@ -139,12 +139,32 @@ Mnemosyne is a pi-coding-agent extension (`src/extension.ts`) that registers:
 | `parse_docx` | Extract text from DOCX files |
 | `iwe_*` (9 commands) | Graph operations: `find`, `retrieve`, `create`, `update`, `delete`, `tree`, `stats`, `extract`, `rename` |
 | `iwe_visualize` | Generate interactive HTML graph visualization |
+| `push_file` | Push a file to the client for download (any file type) |
+| `structured_content` | Send structured data (JSON or base64) to the client for rich display |
 
 **1 sub-agent:**
 
 | Agent | Purpose |
 |---|---|
 | `todo-scanner` | Lightweight agent (Haiku) that scans `todo.md` for open questions related to recently touched entities. Runs after every ingestion and query to surface relevant follow-ups. |
+
+### Client output tools
+
+When Mnemosyne is used through [pi-server](../pi-server), two tools enable delivering rich content to the downstream client:
+
+**`push_file`** — delivers a file to the client for download. Supports any file type (text, markdown, PDF, images, etc.). The agent writes the file to disk and signals pi-server with the path, filename, and MIME type.
+
+```
+> Generate an HTML report of the knowledge graph and send it to me
+```
+
+**`structured_content`** — sends structured data that requires special rendering. Accepts JSON or base64-encoded binary with an optional title and MIME type.
+
+```
+> Export the project requirements as JSON
+```
+
+Both tools use the `setWidget` extension UI mechanism as a fire-and-forget transport. Pi-server detects widget keys `push_file` and `structured_content` and routes them through the configured adapter (see pi-server's adapter documentation).
 
 ### Graph structure
 

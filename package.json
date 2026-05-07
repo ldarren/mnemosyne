@@ -1,14 +1,15 @@
 {
   "name": "mnemosyne",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "POC agentic app for building graph-based knowledge bases from software development documents",
   "type": "module",
   "bin": {
-    "mnemosyne": "src/cli.ts"
+    "mnemosyne": "dist/cli.js"
   },
   "scripts": {
-    "start": "tsx src/cli.ts",
-    "start:rpc": "tsx src/cli.ts --mode rpc",
+    "start": "tsc && node dist/cli.js",
+    "start:rpc": "tsc && node dist/cli.js --mode rpc",
+    "build": "tsc",
     "test": "vitest --run",
     "test:watch": "vitest"
   },
