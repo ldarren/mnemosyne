@@ -33,7 +33,14 @@ Classify the intent:
    - For **relational** questions: follow inclusion links (children) and inline links (cross-references) to map the neighborhood.
    - For **summary** questions: retrieve the root entity with `iwe_retrieve -d 2` to expand children.
    - For **exploration** questions: use `iwe_tree -k entity-key` to see the subtree, then retrieve key nodes.
-3. Keep track of which entity keys you visited — you'll need this for the closing protocol.
+3. **If structured entities lack sufficient detail** — check the entity's `**Source:**` field to identify the original document, then retrieve the corresponding `source-*` entity for full content. For example, if a `req-*` entity says `**Source:** coding-standards.pdf`, retrieve `source-coding-standards` for the complete document text.
+4. Keep track of which entity keys you visited — you'll need this for the closing protocol.
+
+**When to use source content files:**
+- Question asks about specific details (counts, exact wording, lists of items)
+- Structured entity only has a summary or high-level description
+- Question references the original document by name ("What does the SRS say about...")
+- Answer requires information that wouldn't normally be extracted into structured entities
 
 ### Step 4: Answer
 
@@ -82,6 +89,12 @@ If no todo file exists, skip this step.
 | `iwe_stats` | Check graph size and health |
 | `iwe_update` | Update an entity when the user answers a todo question |
 | `subagent` | Delegate todo scanning to the `todo-scanner` agent |
+
+**Source content retrieval pattern:**
+1. Find the relevant structured entity (e.g., `req-sso-integration`)
+2. Read its `**Source:**` field (e.g., `requirements-v2.pdf, p.5`)
+3. Retrieve `source-requirements-v2` for the full document content
+4. Answer from the detailed source content
 
 ## Boundaries
 

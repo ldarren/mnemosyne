@@ -30,29 +30,58 @@ export interface GraphData {
   nodes: GraphNode[];
   edges: GraphEdge[];
   projects: string[];
+  entityColors: Record<string, { bg: string; border: string }>;
 }
 
-export const ENTITY_COLORS: Record<string, { bg: string; border: string }> = {
-  index: { bg: "#f0883e", border: "#f0883e" },
-  requirement: { bg: "#58a6ff", border: "#58a6ff" },
-  design: { bg: "#a371f7", border: "#a371f7" },
-  task: { bg: "#3fb950", border: "#3fb950" },
-  system: { bg: "#f778ba", border: "#f778ba" },
-  api: { bg: "#79c0ff", border: "#79c0ff" },
-  table: { bg: "#56d364", border: "#56d364" },
-  adr: { bg: "#d29922", border: "#d29922" },
-  constraint: { bg: "#f85149", border: "#f85149" },
-  team: { bg: "#db61a2", border: "#db61a2" },
-  role: { bg: "#bc8cff", border: "#bc8cff" },
-  user: { bg: "#39d353", border: "#39d353" },
-  todo: { bg: "#8b949e", border: "#8b949e" },
-  other: { bg: "#484f58", border: "#6e7681" },
-};
+const COLOR_POOL = [
+  "#f0883e", // orange
+  "#58a6ff", // blue
+  "#a371f7", // purple
+  "#3fb950", // green
+  "#f778ba", // pink
+  "#79c0ff", // light blue
+  "#56d364", // emerald
+  "#d29922", // gold
+  "#f85149", // red
+  "#db61a2", // magenta
+  "#bc8cff", // lavender
+  "#39d353", // bright green
+  "#ffa657", // light orange
+  "#d2a8ff", // light purple
+  "#7ee787", // mint
+  "#ff7b72", // coral
+  "#a5d6ff", // sky
+  "#f2cc60", // yellow
+  "#cea5fb", // violet
+  "#9ecbff", // pale blue
+  "#ffd33d", // amber
+  "#b392f0", // iris
+  "#85e89d", // seafoam
+  "#ffab70", // peach
+];
+
+const FALLBACK_COLOR = "#484f58";
+
+export function assignEntityColors(
+  entityTypes: string[],
+): Record<string, { bg: string; border: string }> {
+  const pool = [...COLOR_POOL];
+  const colors: Record<string, { bg: string; border: string }> = {};
+
+  for (const type of entityTypes) {
+    const color = pool.length > 0 ? pool.shift()! : FALLBACK_COLOR;
+    colors[type] = { bg: color, border: color };
+  }
+
+  return colors;
+}
 
 export function getEntityType(key: string): string {
   const filename = key.includes("/") ? key.split("/").pop()! : key;
   if (filename === "index") return "index";
   if (filename === "todo") return "todo";
+  if (filename === "sources") return "sources";
+  if (filename === "schema") return "schema";
   const prefix = filename.split("-")[0];
   const typeMap: Record<string, string> = {
     req: "requirement",
@@ -65,6 +94,10 @@ export function getEntityType(key: string): string {
     constraint: "constraint",
     role: "role",
     team: "team",
+    meeting: "meeting",
+    source: "source",
+    epic: "epic",
+    sprint: "sprint",
   };
   if (typeMap[prefix]) return typeMap[prefix];
   if (key.startsWith("users/")) return "user";
@@ -148,6 +181,8 @@ export async function buildGraphData(iweCwd: string): Promise<GraphData | null> 
   }));
 
   const projects = [...new Set(nodes.map((n) => n.project))].sort();
+  const entityTypes = [...new Set(nodes.map((n) => n.entityType))].sort();
+  const entityColors = assignEntityColors(entityTypes);
 
-  return { nodes, edges, projects };
+  return { nodes, edges, projects, entityColors };
 }

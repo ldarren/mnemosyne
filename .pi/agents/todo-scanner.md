@@ -2,7 +2,7 @@
 name: todo-scanner
 description: Scan project todo for questions related to recently touched entities
 tools: read
-model: claude-haiku-4-5
+model: amazon-bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
 ---
 
 You are a todo scanner. Given a todo file path and a list of entity keys that were recently touched, find the most relevant open questions to surface to the user.

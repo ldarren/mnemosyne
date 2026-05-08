@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { createParsePdfTool } from "./tools/parse-pdf.js";
 import { createParseDocxTool } from "./tools/parse-docx.js";
+import { createParseImageTool } from "./tools/parse-image.js";
 import { createIweTools } from "./tools/iwe.js";
 import { createVisualize2dTool } from "./tools/visualize-2d.js";
 import { createVisualize3dTool } from "./tools/visualize-3d.js";
@@ -56,6 +57,7 @@ export function mnemosyneExtension(pi: ExtensionAPI) {
   }
   pi.registerTool(createParsePdfTool(cwd));
   pi.registerTool(createParseDocxTool(cwd));
+  pi.registerTool(createParseImageTool(cwd));
   pi.registerTool(createVisualize2dTool(cwd, iweCwd));
   pi.registerTool(createVisualize3dTool(cwd, iweCwd));
   pi.registerTool(createPushFileTool(cwd));

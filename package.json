@@ -1,6 +1,6 @@
 {
   "name": "mnemosyne",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "POC agentic app for building graph-based knowledge bases from software development documents",
   "type": "module",
   "bin": {
@@ -17,8 +17,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@mariozechner/pi-ai": "^0.72.1",
-    "@mariozechner/pi-coding-agent": "^0.72.1",
+    "@mariozechner/pi-ai": "^0.73.1",
+    "@mariozechner/pi-coding-agent": "^0.73.1",
     "mammoth": "^1.12.0",
     "pdf-parse": "^2.4.5",
     "typebox": "^1.1.37"

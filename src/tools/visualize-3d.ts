@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Type, type Static } from "typebox";
 import { defineTool } from "@mariozechner/pi-coding-agent";
-import { buildGraphData, ENTITY_COLORS, type GraphData } from "./graph-data.js";
+import { buildGraphData, type GraphData } from "./graph-data.js";
 
 const Visualize3dParams = Type.Object({
   output_path: Type.Optional(
@@ -75,8 +75,15 @@ function generateHtml3d(data: GraphData): string {
   }));
 
   const graphJson = JSON.stringify({ nodes: graphNodes, links: graphLinks });
-  const colorsJson = JSON.stringify(ENTITY_COLORS);
+  const colorsJson = JSON.stringify(data.entityColors);
   const projectsJson = JSON.stringify(data.projects);
+
+  const legendItems = Object.entries(data.entityColors)
+    .map(
+      ([type, c]) =>
+        `  <div class="legend-item"><div class="legend-dot" style="background:${c.bg}"></div> ${type.charAt(0).toUpperCase() + type.slice(1)}</div>`,
+    )
+    .join("\n");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -134,19 +141,7 @@ function generateHtml3d(data: GraphData): string {
 
 <div class="panel legend">
   <h4>Entity Types</h4>
-  <div class="legend-item"><div class="legend-dot" style="background:#f0883e"></div> Index</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div> Requirement</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#a371f7"></div> Design</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div> Task</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f778ba"></div> System</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#79c0ff"></div> API</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#56d364"></div> Table</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div> ADR</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f85149"></div> Constraint</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#db61a2"></div> Team</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#bc8cff"></div> Role</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#39d353"></div> User</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#8b949e"></div> Todo</div>
+${legendItems}
   <div class="legend-section"></div>
   <div class="legend-item"><div class="legend-line" style="border-color:#58a6ff"></div> Parent → Child</div>
   <div class="legend-item"><div class="legend-line" style="border-color:#f78166;border-style:dashed"></div> Cross-reference</div>
@@ -227,12 +222,12 @@ var graph = ForceGraph3D()(document.getElementById('graph'))
 
 // Constrain zoom to prevent getting lost
 var controls = graph.controls();
-controls.minDistance = 30;
-controls.maxDistance = 600;
+controls.minDistance = 100;
+controls.maxDistance = 700;
 controls.enableDamping = true;
 controls.dampingFactor = 0.15;
-controls.rotateSpeed = 0.8;
-controls.zoomSpeed = 0.6;
+controls.rotateSpeed = 1.2;
+controls.zoomSpeed = 2;
 
 function fitAll() {
   graph.zoomToFit(500, 40);
